@@ -457,7 +457,7 @@ class _VoiceRecorderScreenState extends State<VoiceRecorderScreen> {
             Text(
               seconds < minSeconds
                   ? (isAf
-                      ? 'Te kort. Probeer weer vir ten minste $minSecondss.'
+                      ? 'Te kort. Probeer weer vir ten minste $minSeconds.'
                       : 'Too short. Try again for at least $minSeconds s.')
                   : (isAf
                       ? 'Te lank. Maksimum is $maxSeconds s.'

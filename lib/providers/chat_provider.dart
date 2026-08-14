@@ -80,7 +80,9 @@ class ChatProvider extends ChangeNotifier {
       // await _speak(reply);
 
       await _storage.saveMessages(_messages);
-    } catch (e) {
+    } catch (e, stack) {
+      print('CHAT ERROR: $e');
+      print(stack);
       _error = e.toString();
     } finally {
       _isLoading = false;

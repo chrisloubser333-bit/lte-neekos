@@ -51,6 +51,9 @@ class XaiService {
       body: jsonEncode(body),
     );
 
+    print('STATUS CODE: ${response.statusCode}');
+    print('RESPONSE BODY: ${response.body}');
+    
     if (response.statusCode != 200) {
       throw Exception('xAI error ${response.statusCode}: ${response.body}');
     }
