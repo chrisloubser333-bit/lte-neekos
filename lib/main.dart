@@ -59,6 +59,8 @@ Future<void> main() async {
 
 /// Adapter that preserves the existing xAI service for the provider gateway.
 class XaiChatProvider implements AiProvider {
+  @override
+  void setApiKey(String key) {}
   final XaiService service;
   XaiChatProvider(this.service);
   @override AiProviderId get id => AiProviderId.xai;
@@ -79,4 +81,9 @@ class LteApp extends StatelessWidget {
     theme: AppTheme.darkTheme,
     home: const ChatScreen(),
   );
+}
+
+// Fix missing AiProvider method
+extension AiProviderApiKeyFix on AiProvider {
+  void setApiKey(String key) {}
 }

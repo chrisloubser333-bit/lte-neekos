@@ -137,7 +137,6 @@ class _DeformableFacePainter extends CustomPainter {
     final textures = <Offset>[];
     final indices = <int>[];
 
-    final imageAspect = image.width / image.height;
     final scale = math.max(size.width / image.width, size.height / image.height);
     final renderedW = image.width * scale;
     final renderedH = image.height * scale;
@@ -173,8 +172,8 @@ class _DeformableFacePainter extends CustomPainter {
 
     final vertices = ui.Vertices.raw(
       ui.VertexMode.triangles,
-      positions,
-      textureCoordinates: textures,
+      Float32List.fromList(positions.expand<double>((p) => [p.dx, p.dy]).toList()),
+      textureCoordinates: Float32List.fromList(textures.expand<double>((p) => [p.dx, p.dy]).toList()),
       indices: Uint16List.fromList(indices),
     );
     final paint = Paint()

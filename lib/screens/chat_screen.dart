@@ -1,10 +1,11 @@
-import 'dart:async';
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-
-import '../providers/chat_provider.dart';
-import '../providers/settings_provider.dart';
-import '../models/eve_conversation_state.dart';
+import 'dart:math' as math;
+import "../models/eve_conversation_state.dart";
+import "../providers/settings_provider.dart";
+import "dart:async";
+import "dart:math" as math_lib;
+import "package:flutter/material.dart";
+import "package:provider/provider.dart";
+import "../providers/chat_provider.dart";
 import '../theme/app_theme.dart';
 import '../widgets/eve_conversation_status.dart';
 import '../widgets/eve_hero_avatar.dart';
@@ -554,7 +555,7 @@ class _MicControlState extends State<_MicControl>
       child: AnimatedBuilder(
         animation: _controller,
         builder: (_, __) {
-          final pulse = .5 + .5 * math.sin(_controller.value * math.pi * 2);
+          final pulse = .5 + .5 * math_lib.sin(_controller.value * math_lib.pi * 2);
           return Column(
             children: [
               Transform.scale(
