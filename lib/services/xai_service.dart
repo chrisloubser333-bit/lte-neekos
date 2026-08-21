@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:web_socket_channel/web_socket_channel.dart';
-import 'package:uuid/uuid.dart';
 import '../models/lip_sync.dart';
 
 /// Handles communication with xAI Grok APIs (Chat + Voice).
