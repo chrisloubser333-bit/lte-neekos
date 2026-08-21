@@ -1,4 +1,3 @@
-import 'dart:math' as math;
 import "../models/eve_conversation_state.dart";
 import "../providers/settings_provider.dart";
 import "dart:async";
