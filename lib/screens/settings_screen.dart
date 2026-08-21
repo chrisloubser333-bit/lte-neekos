@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/settings_provider.dart';
+import '../models/ai_model_option.dart';
 import '../providers/chat_provider.dart';
 import '../theme/app_theme.dart';
 import 'memory_screen.dart';
 import 'voice_recorder_screen.dart';
+import 'avatar_studio_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -14,12 +16,12 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  final _apiKeyController = TextEditingController();
+  final Map<AiProviderId, TextEditingController> _keyControllers = {for (final p in AiProviderId.values) p: TextEditingController()};
   bool _obscureKey = true;
 
   @override
   void dispose() {
-    _apiKeyController.dispose();
+    for (final c in _keyControllers.values) { c.dispose(); }
     super.dispose();
   }
 
@@ -37,62 +39,62 @@ class _SettingsScreenState extends State<SettingsScreen> {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
         children: [
-          // API Key
-          _sectionTitle(isAf ? 'xAI API-sleutel' : 'xAI API Key'),
-          _glassCard(
-            child: TextField(
-              controller: _apiKeyController,
-              obscureText: _obscureKey,
-              style: const TextStyle(color: AppTheme.textPrimary),
-              decoration: InputDecoration(
-                hintText: chat.hasApiKey ? '••••••••••••••••' : 'xai-...',
-                hintStyle: const TextStyle(color: AppTheme.textSecondary),
-                border: InputBorder.none,
-                suffixIcon: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconButton(
-                      icon: Icon(
-                        _obscureKey ? Icons.visibility : Icons.visibility_off,
-                        color: AppTheme.textSecondary,
-                      ),
-                      onPressed: () =>
-                          setState(() => _obscureKey = !_obscureKey),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.save_rounded,
-                          color: AppTheme.primary),
+          _sectionTitle(isAf ? 'KI-verskaffersleutels' : 'AI provider keys'),
+          Text(
+            isAf
+                ? 'Eve se geheue is gedeel oor alle gekose modelle. Sleutels word plaaslik in veilige berging bewaar.'
+                : 'Eve’s memory is shared across all selected models. Keys are stored locally in secure storage.',
+            style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+          ),
+          const SizedBox(height: 8),
+          ...AiProviderId.values.map((provider) {
+            final configured = settings.isProviderConfigured(provider);
+            final label = switch (provider) {
+              AiProviderId.xai => 'xAI / Grok',
+              AiProviderId.openai => 'OpenAI / GPT',
+              AiProviderId.anthropic => 'Anthropic / Claude',
+              AiProviderId.google => 'Google / Gemini',
+            };
+            final controller = _keyControllers[provider]!;
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: _glassCard(
+                child: TextField(
+                  controller: controller,
+                  obscureText: true,
+                  style: const TextStyle(color: AppTheme.textPrimary),
+                  decoration: InputDecoration(
+                    labelText: '$label API key',
+                    hintText: configured ? '••••••••••••••••' : 'Paste key',
+                    border: InputBorder.none,
+                    suffixIcon: IconButton(
+                      icon: const Icon(Icons.save_rounded, color: AppTheme.primary),
                       onPressed: () async {
-                        final key = _apiKeyController.text.trim();
+                        final key = controller.text.trim();
                         if (key.isNotEmpty) {
-                          await chat.setApiKey(key);
+                          await chat.setProviderApiKey(provider, key);
+                          controller.clear();
                           if (mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(isAf
-                                    ? 'API-sleutel gestoor'
-                                    : 'API key saved'),
-                              ),
+                              SnackBar(content: Text(isAf ? 'Sleutel gestoor' : '$label key saved')),
                             );
-                            _apiKeyController.clear();
                           }
                         }
                       },
                     ),
-                  ],
+                  ),
                 ),
               ),
-            ),
-          ),
+            );
+          }),
+
           const SizedBox(height: 6),
           Text(
             isAf
-                ? 'Kry jou sleutel by console.x.ai. Moet nooit openbaar deel nie.'
-                : 'Get your key at console.x.ai. Never share it publicly.',
-            style: const TextStyle(
-                color: AppTheme.textSecondary, fontSize: 12),
+                ? 'Vir produksie behoort API-oproepe deur jou backend te gaan; moenie mobiele sleutels publiek versprei nie.'
+                : 'For production, route API calls through your backend; do not distribute unrestricted mobile keys publicly.',
+            style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12),
           ),
-
           const SizedBox(height: 28),
 
           // Language
@@ -111,6 +113,61 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   }),
                 ],
               ),
+            ),
+          ),
+
+          const SizedBox(height: 28),
+
+          // AI model selection
+          _sectionTitle(isAf ? 'KI-model' : 'AI model'),
+          ...settings.models.map((model) {
+            final selected = model.id == settings.modelId;
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: _glassCard(
+                borderColor: selected ? AppTheme.primary.withOpacity(0.6) : null,
+                glow: selected,
+                child: ListTile(
+                  leading: Icon(Icons.auto_awesome_rounded,
+                      color: selected ? AppTheme.primary : AppTheme.textSecondary),
+                  title: Text(model.name,
+                      style: const TextStyle(color: AppTheme.textPrimary)),
+                  subtitle: Text(model.description,
+                      style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
+                  trailing: selected
+                      ? const Icon(Icons.check_circle_rounded, color: AppTheme.primary)
+                      : null,
+                  onTap: () => settings.setModelId(model.id),
+                ),
+              ),
+            );
+          }),
+
+          const SizedBox(height: 20),
+
+          // Avatar
+          _sectionTitle(isAf ? 'Avatar' : 'Avatar'),
+          _glassCard(
+            child: ListTile(
+              leading: const Icon(Icons.face_retouching_natural_rounded,
+                  color: AppTheme.secondary),
+              title: Text(
+                isAf ? 'Pas Eve se avatar aan' : 'Customize Eve’s avatar',
+                style: const TextStyle(color: AppTheme.textPrimary),
+              ),
+              subtitle: Text(
+                settings.avatarPath == null
+                    ? (isAf ? 'Gebruik standaard Eve' : 'Using default Eve')
+                    : (isAf ? 'Persoonlike foto gekies' : 'Personal photo selected'),
+                style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+              ),
+              trailing: const Icon(Icons.chevron_right_rounded,
+                  color: AppTheme.textSecondary),
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const AvatarStudioScreen()),
+                );
+              },
             ),
           ),
 

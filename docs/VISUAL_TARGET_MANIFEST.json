@@ -1,0 +1,9 @@
+{
+  "name": "Listen with Eve",
+  "screen": "Conversation Experience",
+  "version": "v1-final-visual-target",
+  "reference": "FINAL_CONVERSATION_EXPERIENCE_VISUAL_TARGET.png",
+  "canonical": true,
+  "rive_required_for_target": false,
+  "rive_future_replacement": "EveHeroAvatar"
+}

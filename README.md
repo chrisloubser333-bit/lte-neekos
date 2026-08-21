@@ -76,3 +76,45 @@ lib/
 5. (Optional) Record a custom voice sample
 
 Enjoy talking to Grok!
+
+
+## Eve real-time avatar architecture
+
+The app now has a reusable `TalkingAvatar` surface. It is intentionally separated from chat/TTS so a future phoneme/viseme provider can drive the mouth animation without replacing the UI.
+
+Current flow:
+
+`user text -> selected Grok model -> response -> selected xAI voice -> audio playback -> TalkingAvatar speaking state`
+
+Personalization:
+
+- AI model selection is persisted.
+- Built-in/custom voice selection is supported.
+- Avatar Studio can capture a camera photo or select one from the gallery.
+- The selected avatar path is persisted locally.
+- Custom voice recording is wired to the xAI custom-voice adapter rather than a fake upload.
+
+The current avatar animation is a speaking/pulse layer, not phoneme-accurate lip sync yet. The next layer should consume xAI TTS streaming timing metadata (`with_timestamps=true`) or a dedicated viseme/lip-sync engine and drive mouth shapes from those timings.
+
+### Production security
+
+Do not ship a long-lived xAI API key inside a production mobile app. Use a small backend to issue ephemeral xAI client secrets for Realtime connections and keep privileged API operations server-side.
+
+
+## Eve avatar architecture
+
+The avatar pipeline now calibrates a user-selected photo on-device using Google ML Kit face contours. The detected eye and lip geometry is cached for the avatar session, and xAI TTS timing drives the viseme layer during playback. ML Kit face detection is Android/iOS only; the rest of the chat and TTS architecture remains provider-neutral.
+
+## Eve Memory & Intelligence v1
+
+The project now includes the first persistent, model-agnostic Eve memory layer.
+
+- `lib/models/eve_memory.dart` — structured memory records
+- `lib/services/memory_manager.dart` — extraction, scoring, retrieval, reinforcement, decay and commands
+- `lib/providers/memory_provider.dart` — UI state bridge
+- `lib/screens/memory_screen.dart` — real memory management UI
+- `lib/services/storage_service.dart` — encrypted memory/API-key storage
+- `docs/EVE_MEMORY_IMPLEMENTATION_BLUEPRINT.md` — implementation details
+- `docs/EVE_MEMORY_INTELLIGENCE_ARCHITECTURE.png` — approved architecture blueprint
+
+The memory system is independent of the AI provider and avatar renderer, so the future Rive avatar and future model providers can be added without changing Eve's long-term memory format.

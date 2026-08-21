@@ -43,10 +43,16 @@
 					<string>$(PRODUCT_MODULE_NAME).SceneDelegate</string>
 					<key>UISceneStoryboardFile</key>
 					<string>Main</string>
-				</dict>
+				    <key>NSCameraUsageDescription</key>
+    <string>Listen with Eve uses the camera to create your personalized avatar.</string>
+</dict>
 			</array>
-		</dict>
-	</dict>
+		    <key>NSCameraUsageDescription</key>
+    <string>Listen with Eve uses the camera to create your personalized avatar.</string>
+</dict>
+	    <key>NSCameraUsageDescription</key>
+    <string>Listen with Eve uses the camera to create your personalized avatar.</string>
+</dict>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>
@@ -66,5 +72,11 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+    <key>NSCameraUsageDescription</key>
+    <string>Listen with Eve uses the camera to create your personalized avatar.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Listen with Eve uses speech recognition so you can talk to Eve by voice.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Listen with Eve uses your microphone to hear what you say.</string>
 </dict>
 </plist>

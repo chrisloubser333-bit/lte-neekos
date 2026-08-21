@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:uuid/uuid.dart';
+import '../models/lip_sync.dart';
 
 /// Handles communication with xAI Grok APIs (Chat + Voice).
 ///
@@ -70,6 +71,18 @@ class XaiService {
     required String voiceId,
     String language = 'en',
   }) async {
+    final result = await textToSpeechWithTimestamps(
+      text: text, voiceId: voiceId, language: language,
+    );
+    return result.audioBytes;
+  }
+
+  /// TTS plus character-level timing metadata used to drive Eve's mouth.
+  Future<TimedTtsResult> textToSpeechWithTimestamps({
+    required String text,
+    required String voiceId,
+    String language = 'en',
+  }) async {
     if (!hasApiKey) throw Exception('API key not set');
 
     final response = await http.post(
@@ -82,6 +95,7 @@ class XaiService {
         'text': text,
         'voice_id': voiceId,
         'language': language,
+        'with_timestamps': true,
       }),
     );
 
@@ -89,7 +103,31 @@ class XaiService {
       throw Exception('TTS error ${response.statusCode}: ${response.body}');
     }
 
-    return response.bodyBytes;
+    final data = jsonDecode(response.body) as Map<String, dynamic>;
+    final audio = base64Decode(data['audio'] as String);
+    final timestamps = data['audio_timestamps'] as Map<String, dynamic>?;
+    final chars = List<String>.from(timestamps?['graph_chars'] ?? const []);
+    final times = (timestamps?['graph_times'] as List? ?? const [])
+        .map((e) => List<num>.from(e as List))
+        .toList();
+
+    final cues = <LipSyncCue>[];
+    for (var i = 0; i < chars.length && i < times.length; i++) {
+      final pair = times[i];
+      if (pair.length < 2) continue;
+      cues.add(LipSyncCue(
+        viseme: visemeForCharacter(chars[i]),
+        start: Duration(microseconds: (pair[0].toDouble() * 1000000).round()),
+        end: Duration(microseconds: (pair[1].toDouble() * 1000000).round()),
+      ));
+    }
+
+    final durationSeconds = (data['duration'] as num?)?.toDouble() ?? 0;
+    return TimedTtsResult(
+      audioBytes: audio,
+      cues: cues,
+      duration: Duration(microseconds: (durationSeconds * 1000000).round()),
+    );
   }
 
   // ---------------------------------------------------------------
@@ -231,4 +269,17 @@ class XaiService {
     final data = jsonDecode(response.body);
     return List<Map<String, dynamic>>.from(data['voices'] ?? []);
   }
+}
+
+
+class TimedTtsResult {
+  final List<int> audioBytes;
+  final List<LipSyncCue> cues;
+  final Duration duration;
+
+  const TimedTtsResult({
+    required this.audioBytes,
+    required this.cues,
+    required this.duration,
+  });
 }

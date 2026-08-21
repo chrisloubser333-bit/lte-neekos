@@ -165,28 +165,31 @@ class _VoiceRecorderScreenState extends State<VoiceRecorderScreen> {
     try {
       final bytes = await File(_filePath!).readAsBytes();
 
-      // In a full app you would inject XaiService via provider.
-      // For now we show success UI and note that the API call is ready.
-      // Real call:
-      // final xai = context.read<XaiService>(); // or similar
-      // final result = await xai.createCustomVoice(
-      //   audioBytes: bytes,
-      //   name: name,
-      //   language: context.read<SettingsProvider>().language,
-      // );
+      final xai = context.read<XaiService>();
+      if (!xai.hasApiKey) {
+        throw Exception('Set your xAI API key in Settings before creating a custom voice.');
+      }
 
-      await Future.delayed(const Duration(seconds: 1)); // simulate network
+      final result = await xai.createCustomVoice(
+        audioBytes: bytes,
+        name: name,
+        language: context.read<SettingsProvider>().language,
+      );
 
-      // Add to local voice list
+      final returnedId = (result['id'] ?? result['voice_id'])?.toString();
+      if (returnedId == null || returnedId.isEmpty) {
+        throw Exception('The voice service did not return a voice id.');
+      }
+
       if (mounted) {
         final settings = context.read<SettingsProvider>();
         settings.addCustomVoice(VoiceOption(
-          id: 'custom_${DateTime.now().millisecondsSinceEpoch}',
+          id: returnedId,
           name: name,
           description: 'Your custom voice',
           isCustom: true,
         ));
-
+        await settings.setVoiceId(returnedId);
         setState(() => _state = RecorderState.done);
       }
     } catch (e) {
